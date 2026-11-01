@@ -1,13 +1,33 @@
-name: Verify Arduino sketch
+name: Verify Maker Studio
 
 on:
   push:
     paths:
+      - "index.html"
+      - "README.md"
       - "sketch/**"
       - ".github/workflows/verify.yml"
   workflow_dispatch:
 
 jobs:
+  validate-site:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Check embedded JavaScript syntax
+        run: |
+          node -e "const fs=require('fs'); const html=fs.readFileSync('index.html','utf8'); const scripts=[...html.matchAll(/<script>([\\s\\S]*?)<\\/script>/g)]; if(!scripts.length) throw new Error('No application script found'); fs.writeFileSync('/tmp/maker-studio.js',scripts.map(x=>x[1]).join('\\n'));"
+          node --check /tmp/maker-studio.js
+
+      - name: Check required workspace actions exist
+        run: |
+          grep -q 'localStorage.setItem' index.html
+          grep -q 'MakerSketch.ino' index.html
+          grep -q 'https://circuitera.org/ide' index.html
+          grep -q 'arduino:avr:leonardo' README.md
+
   compile:
     runs-on: ubuntu-latest
     steps:
@@ -22,5 +42,5 @@ jobs:
           arduino-cli core update-index
           arduino-cli core install arduino:avr
 
-      - name: Compile for Arduino Leonardo
+      - name: Compile starter sketch for Arduino Leonardo
         run: arduino-cli compile --fqbn arduino:avr:leonardo --warnings all sketch
