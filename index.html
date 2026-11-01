@@ -25,7 +25,7 @@ void loop() {
 const $=id=>document.getElementById(id),code=$('code');const libraries=[['Wire','Wire.h'],['SPI','SPI.h'],['Servo','Servo.h'],['EEPROM','EEPROM.h'],['SoftwareSerial','SoftwareSerial.h'],['Adafruit NeoPixel','Adafruit_NeoPixel.h']];
 $('libs').innerHTML=libraries.map(([n,f])=>'<div class="lib"><span>'+n+'</span><button data-inc="'+f+'">Add</button></div>').join('');
 $('libs').onclick=e=>{const f=e.target.dataset.inc;if(!f)return;const line='#include <'+f+'>';if(!code.value.includes(line))code.value=line+'\n'+code.value;$('output').textContent='Inserted '+line+' (library files are not installed).'};
-$('verify').onclick=()=>$('status').textContent='Compiler not configured: a hosted Arduino CLI / AVR-GCC build service is required.';
+$('verify').onclick=()=>$('status').innerHTML='Online Leonardo build check is set up for the saved sketch in the GitHub repository. The editor text is not connected to that build yet. <a href="https://github.com/marwanahmed2023-creator/maker-studio/actions/workflows/verify.yml" target="_blank" rel="noopener">View compile result in GitHub Actions</a>.';
 $('upload').onclick=()=>$('status').textContent='Upload disabled: first confirm the Maker bootloader/profile and connect a compiled firmware uploader.';
 let port=null;
 $('connect').onclick=async()=>{try{if(!('serial'in navigator))throw Error('Web Serial needs Chrome on HTTPS.');port=await navigator.serial.requestPort();$('status').textContent='USB device selected. Ready for the uploader stage; no data has been sent to the board.';}catch(e){$('status').textContent='USB: '+e.message;}};
