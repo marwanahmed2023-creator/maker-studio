@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1020">
+<title>Maker Studio — Leonardo Uploader</title>
+<style>
+:root{color-scheme:dark;font:15px system-ui;background:#0b1020;color:#e8eefb}*{box-sizing:border-box}body{margin:0;padding:24px}main{max-width:760px;margin:30px auto}.panel{background:#111a2d;border:1px solid #26344e;border-radius:14px;padding:20px;margin:14px 0}h1{font-size:24px;margin:0 0 6px}h2{font-size:17px;margin:0 0 10px}.muted{color:#9aabc5;font-size:13px;line-height:1.6}button,input{font:inherit}button{background:#1a2943;color:#e8eefb;border:1px solid #40516c;border-radius:8px;padding:11px 14px;cursor:pointer;margin:5px 4px 5px 0}button.primary{background:#58d6d0;color:#07151b;border:0;font-weight:700}button:disabled{opacity:.45;cursor:not-allowed}input[type=file]{display:block;margin:12px 0;max-width:100%}.status{white-space:pre-wrap;background:#080e1a;border:1px solid #26344e;border-radius:8px;padding:14px;min-height:56px;font:13px/1.5 ui-monospace,monospace}progress{width:100%;height:16px;margin:12px 0}a{color:#65d9d1}.step{display:inline-block;color:#9df1e8;background:#183c3b;border-radius:99px;padding:3px 8px;font-size:12px;font-weight:700;margin-bottom:8px}
+</style>
+</head>
+<body>
+<main>
+  <a href="./">← Back to Maker Studio</a>
+  <div class="panel">
+    <h1>Leonardo USB uploader</h1>
+    <p class="muted">For the Ibtikar Maker Hexagon (ATmega32U4 / Caterina). This uploader uses the AVR109 protocol directly and deliberately separates the 1200-baud reset from bootloader selection, so the bootloader's new USB port can be selected after it appears.</p>
+    <p class="muted"><b>Important:</b> This page uploads a compiled Intel HEX file. It does not compile your .ino sketch.</p>
+  </div>
+  <div class="panel">
+    <span class="step">STEP 1</span>
+    <h2>Choose compiled firmware</h2>
+    <input id="hex" type="file" accept=".hex,text/plain">
+    <p class="muted">Choose the .hex file produced by compiling your sketch for Arduino Leonardo. Do not select an .ino file.</p>
+  </div>
+  <div class="panel">
+    <span class="step">STEP 2</span>
+    <h2>Reset into Caterina bootloader</h2>
+    <p class="muted">Connect the Maker by USB, then click this. The page opens its normal USB serial port at 1200 baud and closes it to request the Leonardo bootloader reset.</p>
+    <button class="primary" id="reset">Reset board into bootloader</button>
+  </div>
+  <div class="panel">
+    <span class="step">STEP 3</span>
+    <h2>Select the bootloader port and upload</h2>
+    <p class="muted">Wait for the board to disappear and reappear, then click below. In the browser picker, select the newly appeared Leonardo/Caterina device (not the old normal-mode port).</p>
+    <button class="primary" id="flash" disabled>Select bootloader & upload</button>
+    <progress id="progress" max="100" value="0"></progress>
+    <div id="status" class="status">Ready. Select a .hex file to begin.</div>
+  </div>
+  <div class="panel">
+    <h2>Board settings</h2>
+    <p class="muted">Arduino Leonardo · ATmega32U4 · AVR109 / Caterina · 57600 baud · 16 MHz · 5 V · 28672-byte application area.</p>
+    <p class="muted">This uses browser Web Serial, available in Chrome on ChromeOS. It has not yet been physically validated on your particular Maker Hexagon.</p>
+    <p class="muted"><a href="https://github.com/vielang/webserial-flasher" target="_blank" rel="noopener">Uploader protocol library and documentation</a></p>
+  </div>
+</main>
+<script type="module">
+const $ = id => document.getElementById(id);
+const hexInput = $('hex');
+const resetButton = $('reset');
+const flashButton = $('flash');
+const status = $('status');
+const progress = $('progress');
+let resetRequested = false;
+
+function say(message) { status.textContent = message; }
+function checkSupport() {
+  if (!('serial' in navigator)) {
+    say('Web Serial is not available. Open this page in current Google Chrome on your Chromebook.');
+    resetButton.disabled = true;
+    return false;
+  }
+  return true;
+}
+hexInput.addEventListener('change', () => {
+  const file = hexInput.files?.[0];
+  flashButton.disabled = !file || !resetRequested;
+  say(file ? 'Selected ' + file.name + '. Next, reset the board into its bootloader.' : 'Ready. Select a .hex file to begin.');
+});
+resetButton.addEventListener('click', async () => {
+  if (!checkSupport()) return;
+  resetButton.disabled = true;
+  try {
+    say('Select the Maker in the USB picker…');
+    const port = await navigator.serial.requestPort({filters:[{usbVendorId:0x2341}]});
+    const info = port.getInfo();
+    say('Selected USB device ' + (info.usbVendorId ?? 'unknown').toString(16) + ':' + (info.usbProductId ?? 'unknown').toString(16) + '. Requesting 1200-baud reset…');
+    await port.open({baudRate:1200});
+    await port.close();
+    resetRequested = true;
+    flashButton.disabled = !hexInput.files?.[0];
+    say('Reset requested. Wait for the Maker to disappear and reappear as its Caterina bootloader. Then click “Select bootloader & upload”.');
+  } catch (error) {
+    say('Reset step failed: ' + (error?.message || String(error)) + '\nIf you cancelled the picker, click Reset again.');
+  } finally {
+    resetButton.disabled = false;
+  }
+});
+flashButton.addEventListener('click', async () => {
+  if (!checkSupport()) return;
+  const file = hexInput.files?.[0];
+  if (!file) { say('Choose a compiled .hex file first.'); return; }
+  flashButton.disabled = true;
+  resetButton.disabled = true;
+  progress.value = 0;
+  let transport;
+  try {
+    say('Choose the newly reappeared Caterina bootloader device in the USB picker…');
+    const port = await navigator.serial.requestPort({filters:[{usbVendorId:0x2341}]});
+    const info = port.getInfo();
+    say('Bootloader device selected (' + (info.usbVendorId ?? 0).toString(16) + ':' + (info.usbProductId ?? 0).toString(16) + '). Loading AVR109 uploader…');
+    const { AVR109, WebSerialTransport, BOARDS } = await import('https://esm.sh/webserial-flasher@1.0.1?bundle');
+    const board = BOARDS['arduino-leonardo'];
+    if (!board || board.protocol !== 'avr109') throw new Error('Leonardo AVR109 board profile was not found in the uploader library.');
+    transport = new WebSerialTransport(port);
+    say('Opening bootloader at ' + board.baudRate + ' baud…');
+    await transport.open(board.baudRate);
+    const firmware = await file.text();
+    say('Uploading to Arduino Leonardo…');
+    const uploader = new AVR109(transport, board, {retry:{syncAttempts:8,retryDelayMs:250}});
+    await uploader.bootload(firmware, (label, pct) => {
+      progress.value = pct;
+      say(label + ' — ' + pct + '%');
+    });
+    progress.value = 100;
+    say('Upload complete. The Maker should restart and run your sketch.');
+    resetRequested = false;
+  } catch (error) {
+    say('Upload failed: ' + (error?.message || String(error)) + '\nIf the message says sync failed, check that you selected the bootloader device that appeared after the reset, not the normal running-mode device.');
+  } finally {
+    try { await transport?.close(); } catch {}
+    flashButton.disabled = !hexInput.files?.[0] || !resetRequested;
+    resetButton.disabled = false;
+  }
+});
+checkSupport();
+</script>
+</body>
+</html>
