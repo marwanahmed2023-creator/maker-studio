@@ -1,0 +1,50 @@
+name: Compile Maker Sketch
+
+on:
+  workflow_dispatch:
+    inputs:
+      sketch_code:
+        description: "Paste the complete Arduino sketch to compile for the Ibtikar Maker / Leonardo"
+        required: true
+        type: string
+        default: |
+          void setup() {
+            pinMode(LED_BUILTIN, OUTPUT);
+          }
+
+          void loop() {
+            digitalWrite(LED_BUILTIN, HIGH);
+            delay(1000);
+            digitalWrite(LED_BUILTIN, LOW);
+            delay(1000);
+          }
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: Install Arduino AVR core
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install arduino:avr
+
+      - name: Prepare sketch
+        env:
+          SKETCH_CODE: ${{ inputs.sketch_code }}
+        run: |
+          mkdir -p /tmp/MakerSketch out
+          printf '%s\n' "$SKETCH_CODE" > /tmp/MakerSketch/MakerSketch.ino
+
+      - name: Compile for Arduino Leonardo
+        run: arduino-cli compile --fqbn arduino:avr:leonardo --export-binaries --output-dir "$GITHUB_WORKSPACE/out" /tmp/MakerSketch
+
+      - name: Upload compiled HEX
+        uses: actions/upload-artifact@v4
+        with:
+          name: Maker-Leonardo-HEX
+          path: out/*.hex
+          if-no-files-found: error
+          retention-days: 7
