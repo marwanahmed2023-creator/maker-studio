@@ -1,34 +1,81 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Maker Studio</title>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1020">
+<title>Maker Studio</title>
 <style>
-:root{color-scheme:dark;font:15px system-ui;background:#0b1020;color:#e8eefb}*{box-sizing:border-box}body{margin:0}header{padding:16px 22px;background:#111a2d;border-bottom:1px solid #26344e;display:flex;align-items:center;justify-content:space-between}h1{font-size:20px;margin:0}main{max-width:1100px;margin:24px auto;padding:0 16px;display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px}.panel{background:#111a2d;border:1px solid #26344e;border-radius:12px;padding:16px}button,select{background:#1a2943;color:#e8eefb;border:1px solid #40516c;border-radius:7px;padding:9px 12px;cursor:pointer;margin:3px}button.primary{background:#58d6d0;color:#07151b;border:0}textarea{width:100%;height:58vh;background:#080e1a;color:#dce8fb;border:1px solid #26344e;border-radius:8px;padding:16px;font:13px/1.6 monospace;resize:vertical}.muted{color:#9aabc5;font-size:13px;line-height:1.6}.status{padding:10px;background:#172238;border-radius:8px;margin:10px 0;font-size:13px}#output{white-space:pre-wrap;font:12px monospace;color:#a9dcd9;min-height:50px}.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:12px 0}.lib{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #26344e;font-size:13px}@media(max-width:750px){main{display:block}.panel{margin-bottom:14px}textarea{height:48vh}}
-</style></head><body>
-<header><h1>⬡ Maker Studio</h1><span class="muted">IBTIKAR MAKER WORKSPACE</span></header>
-<main><section class="panel"><div class="row"><button class="primary" id="verify">Verify</button><button id="upload">Upload</button><button id="connect">Connect USB</button><button id="save">Save .ino</button><button id="open">Open .ino</button><input hidden type="file" id="file" accept=".ino,.cpp,.h,.txt"><select id="board"><option selected>Ibtikar Maker — Arduino Leonardo profile</option><option>Arduino Leonardo</option><option>Arduino Micro</option></select></div>
-<textarea id="code" spellcheck="false">/*
+:root{color-scheme:dark;font:15px system-ui;background:#0b1020;color:#e8eefb}*{box-sizing:border-box}body{margin:0}header{padding:15px 22px;background:#111a2d;border-bottom:1px solid #26344e;display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:20px;margin:0}main{max-width:1180px;margin:22px auto;padding:0 16px;display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:16px}.panel{background:#111a2d;border:1px solid #26344e;border-radius:12px;padding:16px}button,select{background:#1a2943;color:#e8eefb;border:1px solid #40516c;border-radius:7px;padding:9px 12px;cursor:pointer;margin:3px}button:hover{border-color:#58d6d0}button.primary{background:#58d6d0;color:#07151b;border:0;font-weight:700}button:disabled{opacity:.5;cursor:not-allowed}.muted{color:#9aabc5;font-size:13px;line-height:1.6}.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:10px 0}.toolbar{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}textarea{width:100%;height:58vh;min-height:330px;background:#080e1a;color:#dce8fb;border:1px solid #26344e;border-radius:8px;padding:16px;font:13px/1.6 ui-monospace,monospace;resize:vertical;tab-size:2}.status{padding:11px;background:#172238;border-radius:8px;margin:10px 0;font-size:13px;line-height:1.5}#output{white-space:pre-wrap;font:12px monospace;color:#a9dcd9;min-height:25px}.lib{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #26344e;font-size:13px}.lib button{padding:5px 9px}a{color:#65d9d1}h3{margin:7px 0 10px}.pill{display:inline-block;padding:4px 8px;border-radius:99px;background:#183c3b;color:#9df1e8;font-size:11px;font-weight:700}@media(max-width:760px){main{display:block}.panel{margin-bottom:14px}textarea{height:48vh}.toolbar{align-items:flex-start}}
+</style>
+</head>
+<body>
+<header><h1>⬡ Maker Studio</h1><span class="muted">IBTIKAR MAKER HEXAGON · ATmega32U4</span></header>
+<main>
+<section class="panel">
+  <div class="toolbar">
+    <div class="row">
+      <button id="new">New sketch</button>
+      <button id="open">Open .ino</button>
+      <button class="primary" id="export">Export .ino</button>
+      <input hidden type="file" id="file" accept=".ino,.cpp,.h,.txt">
+    </div>
+    <span class="pill" id="saveState">Saved in this browser</span>
+  </div>
+  <div class="row">
+    <label class="muted" for="board">Board profile</label>
+    <select id="board"><option value="arduino:avr:leonardo" selected>Ibtikar Maker — Leonardo</option></select>
+    <button id="ide" class="primary">Open full Arduino IDE ↗</button>
+  </div>
+  <textarea id="code" spellcheck="false" aria-label="Arduino sketch editor">/*
   Maker Studio starter sketch
-  Ibtikar Maker uses an ATmega32U4.
-  Confirm the official pin map before using other hardware.
+  Ibtikar Maker Hexagon uses the ATmega32U4.
+  The official Ibtikar guide specifies Arduino Leonardo.
 */
+
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
 }
+
 void loop() {
   digitalWrite(LED_BUILTIN, HIGH);
   delay(500);
   digitalWrite(LED_BUILTIN, LOW);
   delay(500);
 }</textarea>
-<div class="status" id="status">Ready. USB connection and sketch editing are available in supported Chrome browsers.</div><div id="output">Maker Studio loaded.</div></section>
-<aside class="panel"><h3>Board information</h3><p class="muted">ATmega32U4 · 5V · native USB. Ibtikar’s official advanced guide specifies Arduino Leonardo in the Arduino IDE. Use the Leonardo profile (16 MHz).</p><h3>Library includes</h3><p class="muted">Insert common Arduino library headers into your sketch. This preview does not download library source files.</p><div id="libs"></div><h3>Important</h3><p class="muted">Board profile: confirmed as Arduino Leonardo by Ibtikar’s official guide. The remaining work is the compiler and browser-based firmware uploader; selecting the profile alone does not flash the board.</p><p class="muted"><a href="https://www.ibtikar.io/project/maker/" target="_blank">Official Maker page</a> · <a href="https://www.ibtikar.io/wp-content/uploads/2021/08/Maker_Advanced_EN.pdf" target="_blank">Advanced guide</a></p></aside></main>
+  <div class="status" id="status">Your sketch is saved automatically in this browser. For real compilation and USB uploading, use the full browser IDE.</div>
+  <div id="output">Ready. Choose Export .ino, then open the full IDE to compile and upload.</div>
+</section>
+<aside class="panel">
+  <h3>Ready-to-use compiler</h3>
+  <p class="muted">Maker Studio's editor saves and exports your sketch. The full IDE below provides the real AVR compiler, library support, Web Serial upload and Serial Monitor.</p>
+  <p><a href="https://circuitera.org/ide" target="_blank" rel="noopener">Open Circuitera Arduino IDE ↗</a></p>
+  <p class="muted">In that IDE, import your exported .ino file, select <b>Arduino Leonardo</b>, then use Verify. Connect the Maker by USB and use Upload.</p>
+  <div class="status"><b>Board profile confirmed</b><br>ATmega32U4 · Arduino Leonardo · 16 MHz</div>
+  <h3>Quick library includes</h3>
+  <p class="muted">These add an include line only. Install the matching library in the full IDE if the compiler says it is missing.</p>
+  <div id="libs"></div>
+  <h3>Project checks</h3>
+  <p class="muted"><a href="https://github.com/marwanahmed2023-creator/maker-studio/actions/runs/41293302627" target="_blank" rel="noopener">Starter sketch build: passed ✓</a></p>
+  <p class="muted">That test compiled the saved starter sketch in GitHub Actions. It did not compile the text currently in this editor or test a physical USB upload.</p>
+  <hr style="border:0;border-top:1px solid #26344e;margin:14px 0">
+  <p class="muted"><a href="https://www.ibtikar.io/project/maker/" target="_blank" rel="noopener">Ibtikar Maker page</a> · <a href="https://www.ibtikar.io/wp-content/uploads/2021/08/Maker_Advanced_EN.pdf" target="_blank" rel="noopener">Official advanced guide</a></p>
+</aside>
+</main>
 <script>
-const $=id=>document.getElementById(id),code=$('code');const libraries=[['Wire','Wire.h'],['SPI','SPI.h'],['Servo','Servo.h'],['EEPROM','EEPROM.h'],['SoftwareSerial','SoftwareSerial.h'],['Adafruit NeoPixel','Adafruit_NeoPixel.h']];
-$('libs').innerHTML=libraries.map(([n,f])=>'<div class="lib"><span>'+n+'</span><button data-inc="'+f+'">Add</button></div>').join('');
-$('libs').onclick=e=>{const f=e.target.dataset.inc;if(!f)return;const line='#include <'+f+'>';if(!code.value.includes(line))code.value=line+'\n'+code.value;$('output').textContent='Inserted '+line+' (library files are not installed).'};
-$('verify').onclick=()=>$('status').innerHTML='Online Leonardo build check is set up for the saved sketch in the GitHub repository. The editor text is not connected to that build yet. <a href="https://github.com/marwanahmed2023-creator/maker-studio/actions/workflows/verify.yml" target="_blank" rel="noopener">View compile result in GitHub Actions</a>.';
-$('upload').onclick=()=>$('status').textContent='Upload disabled: first confirm the Maker bootloader/profile and connect a compiled firmware uploader.';
-let port=null;
-$('connect').onclick=async()=>{try{if(!('serial'in navigator))throw Error('Web Serial needs Chrome on HTTPS.');port=await navigator.serial.requestPort();$('status').textContent='USB device selected. Ready for the uploader stage; no data has been sent to the board.';}catch(e){$('status').textContent='USB: '+e.message;}};
-$('save').onclick=()=>{const a=document.createElement('a'),u=URL.createObjectURL(new Blob([code.value],{type:'text/plain'}));a.href=u;a.download='sketch.ino';a.click();URL.revokeObjectURL(u)};
-$('open').onclick=()=>$('file').click();$('file').onchange=async e=>{if(e.target.files[0])code.value=await e.target.files[0].text();e.target.value=''};
-</script></body></html>
+const $=id=>document.getElementById(id),code=$('code');
+const starter=code.value,storageKey='maker-studio-sketch-v2';
+const libraries=[['Wire','Wire.h'],['SPI','SPI.h'],['Servo','Servo.h'],['EEPROM','EEPROM.h'],['SoftwareSerial','SoftwareSerial.h'],['Adafruit NeoPixel','Adafruit_NeoPixel.h']];
+try{const saved=localStorage.getItem(storageKey);if(saved)code.value=saved;}catch(e){}
+function saved(){try{localStorage.setItem(storageKey,code.value);$('saveState').textContent='Saved in this browser';}catch(e){$('saveState').textContent='Browser storage unavailable';}}
+code.addEventListener('input',()=>{$('saveState').textContent='Saving…';saved();});
+$('libs').innerHTML=libraries.map(([n,f])=>'<div class="lib"><span>'+n+'</span><button type="button" data-inc="'+f+'">Insert</button></div>').join('');
+$('libs').addEventListener('click',e=>{const f=e.target.dataset.inc;if(!f)return;const line='#include <'+f+'>';if(!code.value.includes(line))code.value=line+'\n'+code.value;saved();$('output').textContent='Inserted '+line+'. Install the library in the full IDE if required.';});
+function exportSketch(){const blob=new Blob([code.value],{type:'text/plain'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='MakerSketch.ino';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+$('export').onclick=()=>{saved();exportSketch();$('status').textContent='Sketch exported as MakerSketch.ino. Keep a backup before clearing browser data.';$('output').textContent='Export complete.';};
+$('open').onclick=()=>$('file').click();
+$('file').onchange=async e=>{const f=e.target.files[0];if(f){code.value=await f.text();saved();$('output').textContent='Opened '+f.name;}e.target.value='';};
+$('new').onclick=()=>{if(!confirm('Replace the current sketch with a blank sketch? Export a backup first if needed.'))return;code.value='void setup() {\n}\n\nvoid loop() {\n}\n';saved();$('output').textContent='New sketch created.';};
+$('ide').onclick=()=>{saved();exportSketch();window.open('https://circuitera.org/ide','_blank','noopener');$('status').textContent='Your .ino file has been exported and the full IDE opened in a new tab. Import MakerSketch.ino there, select Arduino Leonardo, then Verify and Upload.';$('output').textContent='The full IDE is separate from Maker Studio; the file must be imported there.';};
+</script>
+</body></html>
